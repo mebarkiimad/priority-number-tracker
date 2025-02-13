@@ -3,7 +3,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-
 fun classify(serie: MutableList<Int>): HashMap<Int, Int> {
     val map: HashMap<Int, Int> = hashMapOf()
     serie.forEachIndexed { index, value ->
@@ -15,22 +14,25 @@ fun classify(serie: MutableList<Int>): HashMap<Int, Int> {
     }
     return map
 }
+fun main(){
+    print("Enter the number of series to iterate: ")
+    val seriesCount = readln().toInt()
 
-fun main(): Unit = runBlocking {
+    print("Enter the length of the series: ")
+    val serieLength = readln().toInt()
+    process(seriesCount,serieLength)
+}
+fun process(seriesCount:Int,serieLength:Int): Unit = runBlocking {
     val dataChannel = Channel<MutableList<Int>>() // Channel for communication
     val serie: MutableList<Int> = mutableListOf()
-
     val producerJob = launch {
-        var counter = 0
-        repeat(10) {
-            repeat(5) {
+        repeat(seriesCount) {
+            repeat(serieLength) {
                 delay(200L)
                 val randomClassNumber = (0..5).random()
                 serie.add(randomClassNumber)
-                counter += 1
-                if (counter == 5) {
+                if (serie.size == serieLength) {
                     dataChannel.send(serie.toMutableList()) // Send a copy to avoid modification issues
-                    counter = 0
                     serie.clear()
                 }
             }
