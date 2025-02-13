@@ -3,30 +3,49 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
+
+fun classify(serie: MutableList<Int>): HashMap<Int, Int> {
+    val map: HashMap<Int, Int> = hashMapOf()
+    serie.forEachIndexed { index, value ->
+        serie.forEachIndexed { subIndex, subValue ->
+            if (subValue == value) {
+                map[index] = map.getOrDefault(index, 0) + 1
+            }
+        }
+    }
+    return map
+}
+
 fun main(): Unit = runBlocking {
-    val dataChannel = Channel<MutableList<Int>>()
+    val dataChannel = Channel<MutableList<Int>>() // Channel for communication
+    val serie: MutableList<Int> = mutableListOf()
+
     val producerJob = launch {
-        val serie  = mutableListOf<Int>()
-        var TIMER = 0;
-        repeat(2  ) {
+        var counter = 0
+        repeat(10) {
             repeat(5) {
                 delay(200L)
                 val randomClassNumber = (0..5).random()
                 serie.add(randomClassNumber)
-                TIMER += 1;
-                if (TIMER == 5) {
-                    dataChannel.send(serie)
-                    TIMER = 0;
-
+                counter += 1
+                if (counter == 5) {
+                    dataChannel.send(serie.toMutableList()) // Send a copy to avoid modification issues
+                    counter = 0
+                    serie.clear()
                 }
             }
         }
+        dataChannel.close() // Close the channel when done
     }
-    launch {
-        for (received in dataChannel) {
-            val message = received.joinToString(",")
+
+    val consumerJob = launch {
+        for (received in dataChannel) { // Reads until the channel is closed
+            val message = classify(serie = received)
             println("Received: [$message]")
         }
-        println("End")
+        println("End") // Only prints when the channel is closed
     }
+
+    producerJob.join() // Wait for the producer to finish
+    consumerJob.join() // Wait for the consumer to finish
 }
