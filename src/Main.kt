@@ -1,15 +1,22 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-fun main() {
-    val name = "Kotlin"
-    val rnds = (0..10).random()
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
+fun main(): Unit = runBlocking {
+    val dataChannel = Channel<Int>()
+    val producerJob = launch {
+        repeat(10000) { // launch a lot of coroutines
+            launch {
+                delay(500L)
+                val randomClassNumber = (0..5).random()
+                dataChannel.send(randomClassNumber)
+            }
+        }
+    }
+    launch {
+        for (received in dataChannel) {
+            println("Received: $received")
+        }
     }
 }
